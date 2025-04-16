@@ -6,12 +6,26 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Product;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Transaction;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\TransactionExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Models\DetailTransaction;
 
 class AdminController extends Controller
 {
-    public function dashboard(){
-        return view('admin.dashboard');
+    public function dashboard()
+    {
+        $barChart = Transaction::selectRaw('DATE(created_at) as tanggal, COUNT(*) as jumlah_transaksi')->groupBy('tanggal')->orderBy('tanggal')->get();
+
+        $pieChart = DetailTransaction::join('products', 'detail_transactions.product_id', '=', 'products.id')->selectRaw('products.product_name, SUM(qty) as total_terjual')->groupBy('products.product_name')->orderBy('total_terjual', 'desc')->get();
+
+        return view('admin.dashboard', [
+            'barChart' => $barChart,
+            'pieChart' => $pieChart,
+        ]);
     }
+
 
     public function userIndex()
     {
@@ -188,5 +202,29 @@ class AdminController extends Controller
         Product::where('id', $id)->delete();
 
         return redirect()->route('admin.produk')->with('success', 'Berhasil menghapus data Produk!');
+    }
+
+    public function pembelianIndex()
+    {
+        $transactions = Transaction::with(['customer', 'user', 'detailTransactions.product'])->orderBy('created_at', 'desc')->get();
+        return view('admin.pembelian.index', compact('transactions'));
+    }
+
+    public function unduhStruk($id)
+    {
+        $transaction = Transaction::with(['customer', 'user', 'detailTransactions.product'])->findOrFail($id);
+
+        $totalAfterDiscount = session('totalAfterDiscount');
+
+        $html = view('petugas.pdf.receipt', compact('transaction', 'totalAfterDiscount'))->render();
+
+        $pdf = Pdf::loadHTML($html);
+
+        return $pdf->download('receipt-' . $id . '.pdf');
+    }
+
+    public function exportTransactions()
+    {
+        return Excel::download(new TransactionExport, 'transactions.xlsx');
     }
 }

@@ -1,21 +1,21 @@
 @extends('template.sidebar')
 @section('content')
-<div class="card p-4" style="width: 1045px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+<div class="card p-4" style="width: 1225px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
     <div class="d-flex justify-content-between">
         <div class="d-flex" style="gap: 5px;">
-            <a href="#" class="btn btn-secondary" style="height: 40px;">Kembali</a>
-            <a href="#" class="btn btn-primary" style="height: 40px;">Unduh</a>
+            <a href="{{ route('petugas.pembelian') }}" class="btn btn-secondary" style="height: 40px;">Kembali</a>
+            <a href="{{ route('petugas.unduh.struk', $transaction->id ) }}" class="btn btn-primary" style="height: 40px;">Unduh</a>
         </div>
         <div class="info text-end mt-2" style="line-height: 10px; margin-right: 10px;">
-            <p>Invoice - #980</p>
-            <p>10-04-25</p>
+            <p>Invoice - #{{ $transaction->id }}</p>
+            <p>{{ \Carbon\Carbon::parse($transaction->created_at)->format('d F Y H:i') }}</p>
         </div>
     </div>
 
     <div class="info-member mt-4 p-2" style="line-height: 10px;">
-        <p><strong>1928199</strong></p>
-        <p>Member Sejak : 10-04-25</p>
-        <p>Member Point : 97898</p>
+        <p><strong>{{ $transaction->customer->phone_number ?? '-' }}</strong></p>
+        <p>Member Sejak : {{ $transaction->customer->created_at->format('d F Y') }}</p>
+        <p>Member Point : {{ $transaction->customer->points ?? '0' }}</p>
     </div>
 
     <div class="container p-2 mt-3">
@@ -29,17 +29,27 @@
                 </tr>
             </thead>
             <tbody>
+                @foreach ($transaction->detailTransactions as $item)
                     <tr>
-                        <td>Kucing Lucu</td>
-                        <td>Rp. 80.000</td>
-                        <td>82</td>
+                        <td>{{ $item->product->product_name }}</td>
+                        <td>Rp. {{ number_format($item->product->price, 0, ',', '.') }}</td>
+                        <td>{{ $item->qty }}</td>
                         <td class="text-end">
-                            Rp. 80.000
+                            Rp. {{ number_format($item->product->price * $item->qty, 0, ',', '.') }}
                         </td>
                     </tr>
+                @endforeach
             </tbody>
         </table>
     </div>
+
+    @php
+        // Hitung total belanja
+        $totalBelanja = 0;
+        foreach ($transaction->detailTransactions as $item) {
+            $totalBelanja += $item->product->price * $item->qty;
+        }
+    @endphp
 
     <div class="container p-2 mt-5">
         <table style="width: 100%;">
@@ -54,22 +64,30 @@
             <tbody>
                 <tr style="height: auto;">
                     <td>
-                        28 Poin
+                        @if(session('poin_digunakan'))
+                            {{ session('poin_digunakan') }} Poin
+                        @else
+                            0
+                        @endif
                     </td>
-                    <td>Petugas</td>
-                    <td>Rp. 80.000</td>
+                    <td>{{ $transaction->user->name ?? '-' }}</td>
+                    <td>Rp. {{ number_format($transaction->change, 0, ',', '.') }}</td>
                     <td class="text-end align-top">
                         <div class="d-inline-block p-2 bg-dark text-white rounded" style="min-width: 250px;">
                             <p class="mb-1 text-start">TOTAL</p>
                             <div style="line-height: 1.5;">
+                                @if(session('poin_digunakan') > 0)
                                 <p class="mb-1 text-end">
-                                    <s>Rp. 80.000</s>
+                                    <s>Rp. {{ number_format($totalBelanja, 0, ',', '.') }}</s>
                                 </p>
+
+                                @endif
                                 <p class="mb-0 text-end">
                                     <b style="font-size: 20px;">
-                                        Rp. 240.000
+                                        Rp. {{ number_format($transaction->discount_price, 0, ',', '.') }}
                                     </b>
                                 </p>
+
                             </div>
                         </div>
                     </td>

@@ -52,7 +52,6 @@
         display: flex;
         flex-direction: row;
         width: 100%;
-        max-width: 1050px;
     }
 
     .card-left {
@@ -71,13 +70,13 @@
 </style>
 
 <div class="nav d-flex">
-    <a href="#"><i class="ti ti-home"></i></a>
+    <a href="{{ route('petugas.pembelian') }}"><i class="ti ti-home"></i></a>
     <p><span> > </span> Pembelian</p>
 </div>
 
 <p class="title mb-3 mt-2">Penjualan</p>
 
-<div class="card p-1 card-custom" style="width: 1050px;">
+<div class="card p-1 card-custom" style="width: 1220px;">
     <div class="card-left">
         <table border="1" style="width: 100%; height: 100%;">
             <thead>
@@ -89,44 +88,49 @@
                 </tr>
             </thead>
             <tbody>
+                @foreach ($items as $item)
                 <tr>
-                    <td>Kucing Lucu</td>
-                    <td>76</td>
-                    <td>Rp. 80.000</td>
-                    <td>Rp. 240.000</td>
+                    <td>{{ $item['product_name'] }}</td>
+                    <td>{{ $item['quantity'] }}</td>
+                    <td>Rp. {{ number_format($item['price'], 0, ',', '.') }}</td>
+                    <td>Rp. {{ number_format($item['subtotal'], 0, ',', '.') }}</td>
                 </tr>
                 @endforeach
                 <tr style="font-weight: bold; background-color: #f9f9f9;">
                     <td colspan="2"></td>
                     <td style="padding: 10px;">Total Harga</td>
-                    <td style="padding: 10px;" id="totalHarga" data-total-harga="">
-                        Rp. 240.000
+                    <td style="padding: 10px;" id="totalHarga" data-total-harga="{{ $total }}">
+                        Rp. {{ number_format($total, 0, ',', '.') }}
                     </td>
                 </tr>
                 <tr style="font-weight: bold;">
                     <td colspan="2"></td>
                     <td style="padding: 10px;">Total Bayar</td>
                     <td style="padding: 10px;">
-                        Rp. 240.000
+                        Rp. {{ number_format(session('total_price'), 0, ',', '.') }}
                     </td>
+                </tr>
+                <tr style="font-weight: bold;">
+                    <td colspan="2"></td>
+                    <td style="padding: 10px;">Point Akan Didapat</td>
+                    <td style="padding: 10px;">{{ ($totalPointAkanDidapat) }}</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
     <div class="card-right">
-
         @if(session('error'))
-            <div class="alert alert-danger">
-                {{ session('error') }}
-            </div>
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
         @endif
 
         <form action="{{ route('petugas.member.proses') }}" method="POST">
             @csrf
             <div class="col-md-6 w-100">
                 <label for="namaMember" class="form-label">Nama Member (identitas) <span class="text-danger">*</span></label>
-                <input type="text" class="form-control form" name="name" value="">
+                <input type="text" class="form-control form" name="name" value="{{ session('member_name') }}">
                 @error('name')
                 <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -134,7 +138,7 @@
 
             <div class="col-md-6 w-100 mt-3">
                 <label for="points" class="form-label">Point <span class="text-danger">*</span></label>
-                <input type="number" class="form-control form" name="points" id="pointsInput" value="" disabled readonly>
+                <input type="number" class="form-control form" name="points" id="pointsInput" value="{{ session('member_points', 0) }}" disabled readonly>
             </div>
 
             <div class="d-flex">
@@ -142,8 +146,8 @@
                 <p style="margin-top: 13px; margin-left: 10px; color: #757575;">Gunakan poin</p>
             </div>
 
-            <input type="hidden" name="total_bayar" id="totalBayarInput" value="">
-            <input type="hidden" name="harga_pure" id="hargaAwalInput" value="">
+            <input type="hidden" name="total_bayar" id="totalBayarInput" value="{{ session('total_price') }}">
+            <input type="hidden" name="harga_pure" id="hargaAwalInput" value="{{ $total }}">
             <input type="hidden" name="use_points" id="usePointsHidden" value="0">
 
             <button type="submit" class="btn w-100 mt-3" style="background-color: #1e4db7; color: #ffffff;">Selanjutnya</button>
@@ -151,25 +155,68 @@
     </div>
 </div>
 
+<script>
+    const usePointsCheckbox = document.getElementById('usePointsCheckbox');
+    const pointsInput = document.getElementById('pointsInput');
+    const totalHargaEl = document.getElementById('totalHarga');
+    const totalBayarEl = document.getElementById('totalBayar');
+    const usePointsHidden = document.getElementById('usePointsHidden');
+    const totalBayarInput = document.getElementById('totalBayarInput');
+    const hargaAwalInput = document.getElementById('hargaAwalInput');
+
+    const nilaiTukarPerPoint = 1;
+    const totalHargaAwal = parseInt(totalHargaEl.dataset.totalHarga);
+
+    usePointsCheckbox.addEventListener('change', function () {
+        const usePoints = this.checked;
+        const points = parseInt(pointsInput.value) || 0;
+
+        if (usePoints && points === 0) {
+            alert("Tidak ada point! Point tidak bisa digunakan di pembelian pertama");
+            this.checked = false;
+            return;
+        }
+
+        let hargaSetelahPoin = totalHargaAwal;
+
+        if (usePoints) {
+            const potongan = points * nilaiTukarPerPoint;
+            hargaSetelahPoin = Math.max(totalHargaAwal - potongan, 0);
+            usePointsHidden.value = 1;
+        } else {
+            usePointsHidden.value = 0;
+            hargaSetelahPoin = totalHargaAwal;
+        }
+
+        totalHargaEl.innerText = 'Rp. ' + hargaSetelahPoin.toLocaleString('id-ID');
+
+        totalBayarEl.innerText = 'Rp. ' + totalBayarEl.dataset.totalBayar;
+
+        totalBayarInput.value = totalBayarEl.dataset.totalBayar;
+        hargaAwalInput.value = totalHargaAwal;
+    });
+</script>
+
+
 @if(session('success'))
-    <script>
-        Swal.fire({
-            text: "{{ session('success') }}",
-            icon: "success",
-            confirmButtonColor: "#3085d6",
-            confirmButtonText: "OK",
-        });
-    </script>
+<script>
+    Swal.fire({
+        text: "{{ session('success') }}",
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "OK",
+    });
+</script>
 @endif
 @if(session('failed'))
-    <script>
-        Swal.fire({
-            text: "{{ session('failed') }}",
-            icon: "error",
-            confirmButtonColor: "#d33",
-            confirmButtonText: "OK",
-        });
-    </script>
+<script>
+    Swal.fire({
+        text: "{{ session('failed') }}",
+        icon: "error",
+        confirmButtonColor: "#d33",
+        confirmButtonText: "OK",
+    });
+</script>
 @endif
 
 @endsection

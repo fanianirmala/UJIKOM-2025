@@ -84,14 +84,14 @@
 
 
 <div class="nav d-flex">
-    <a href="#"><i class="ti ti-home"></i></a><p><span> > </span> Penjualan</p>
+    <a href="{{ route('admin.produk') }}"><i class="ti ti-home"></i></a><p><span> > </span> Penjualan</p>
 </div>
 
 <p class="title mb-3 mt-2">Penjualan</p>
 
-<a href="#" class="addBtn">Export Penjualan (.xlsx)</a>
+<a href="{{ route('admin.export.transactions') }}" class="addBtn">Export Penjualan (.xlsx)</a>
 
-<div class="card p-3" style="width: 1035px;">
+<div class="card p-3" style="width: 1220px;">
     <div class="table-responsive">
         <table class="table" id="myTable">
             <thead>
@@ -105,21 +105,23 @@
                 </tr>
             </thead>
             <tbody>
+                @php $no = 1; @endphp
+                @foreach ($transactions as $transaction)
                     <tr>
-                        <td>1</td>
+                        <td>{{ $no++ }}</td>
                         <td>
-                            Non Member
+                            {{ $transaction->customer ? $transaction->customer->name : '-' }}
                         </td>
-                        <td>15-04-25</td>
-                        <td>Rp. 28.000</td>
+                        <td>{{ \Carbon\Carbon::parse($transaction->created_at)->format('d-m-Y') }}</td>
+                        <td>Rp {{ number_format($transaction->total_price, 0, ',', '.') }}</td>
                         <td>
-                            Petugas
+                            {{ $transaction->user ? $transaction->user->name : 'User tidak diketahui' }}
                         </td>
                         <td style="text-align: center">
-                            <button class="viewBtn" data-bs-toggle="modal" data-bs-target="#updateModal">Lihat</button>
+                            <button class="viewBtn" data-bs-toggle="modal" data-bs-target="#updateModal{{ $transaction->id }}">Lihat</button>
 
-                            {{-- MODAL EDIT --}}
-                            <div class="modal fade mt-5" id="updateModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            {{-- MODAL --}}
+                            <div class="modal fade mt-5" id="updateModal{{ $transaction->id }}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">
@@ -128,11 +130,11 @@
                                         </div>
                                         <div class="modal-body" style="text-align: left; line-height: 1;">
                                             <div class="d-flex" style="justify-content: space-between">
-                                                <p>Member Status : Member</p>
-                                                <p>Bergabung Sejak : 10-04-25</p>
+                                                <p>Member Status : {{ $transaction->customer && $transaction->customer->name === 'Non Member' ? 'Non Member' : 'Member' }}</p>
+                                                <p>Bergabung Sejak : {{ $transaction->created_at->format('d-m-Y') }}</p>
                                             </div>
-                                            <p>No. HP : 089582376</p>
-                                            <p class="mb-5">Point Member : 0</p>
+                                            <p>No. HP : {{ $transaction->customer->phone_number ?? '-' }}</p>
+                                            <p class="mb-5">Point Member : {{ $transaction->customer->points ?? '0' }}</p>
 
                                             <table style="width: 100%">
                                                 <thead>
@@ -144,23 +146,27 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
+                                                    @php $total = 0; @endphp
+                                                    @foreach ($transaction->detailTransactions->where('qty', '>', 0) as $detailTransaction)
                                                         <tr>
-                                                            <td>Kucing Lucu</td>
-                                                            <td>4</td>
-                                                            <td>Rp. 80.000</td>
-                                                            <td>Rp. 240.000</td>
+                                                            <td>{{ $detailTransaction->product->product_name ?? '-' }}</td>
+                                                            <td>{{ $detailTransaction->qty }}</td>
+                                                            <td>Rp. {{ number_format($detailTransaction->price, 0, ',', '.') }}</td>
+                                                            <td>Rp. {{ number_format($detailTransaction->subtotal, 0 ,',', '.') }}</td>
                                                         </tr>
+                                                        @php $total += $detailTransaction->subtotal; @endphp
+                                                    @endforeach
                                                     <tr>
                                                         <td colspan="2"></td>
                                                         <td><strong>Total</strong></td>
-                                                        <td><strong>Rp. 240.000</strong></td>
+                                                        <td><strong>Rp. {{ number_format($total, 0, ',', '.') }}</strong></td>
                                                     </tr>
                                                 </tbody>
                                             </table>
 
                                             <div class="info" style="text-align: center">
-                                                <p class="mt-5">Dibuat pada : 15-04-25</p>
-                                                <p>Oleh : Petugas</p>
+                                                <p class="mt-5">Dibuat pada : {{ $transaction->created_at }}</p>
+                                                <p>Oleh : {{ $transaction->user->name ?? 'Petugas'}}</p>
                                             </div>
                                             <div class="modal-footer" style="float: right">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
@@ -169,7 +175,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <a href="#" class="unduhBtn">Unduh Bukti</a>
+                            <a href="{{ route('admin.unduh.struk', $transaction->id) }}" class="unduhBtn">Unduh Bukti</a>
                         </td>
                     </tr>
                 @endforeach

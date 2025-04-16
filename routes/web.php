@@ -5,8 +5,6 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PetugasController;
 
-
-
 Route::middleware('IsGuest')->group(function(){
     Route::get('/', [LoginController::class, 'loginForm'])->name('login');
     Route::post('/loginAuth', [LoginController::class, 'loginAuth'])->name('loginAuth');
@@ -38,6 +36,13 @@ Route::middleware(['IsLogin', 'IsAdmin'])->group(function(){
         Route::put('/produk/update/{id}', [AdminController::class, 'produkUpdate'])->name('produk.update');
         Route::put('/produk/stok/edit/{id}', [AdminController::class, 'produkStok'])->name('produk.stok');
         Route::delete('/produk/delete/{id}', [AdminController::class, 'produkDestroy'])->name('produk.destroy');
+
+        //PENJUALAN
+        Route::get('/pembelian', [AdminController::class, 'pembelianIndex'])->name('pembelian');
+
+        // EXPORT
+        Route::get('/unduh-struk/{id}', [AdminController::class, 'unduhStruk'])->name('unduh.struk'); 
+        Route::get('/export-transactions', [AdminController::class, 'exportTransactions'])->name('export.transactions');
     });
 });
 
@@ -48,13 +53,18 @@ Route::middleware(['IsLogin', 'IsPetugas'])->group(function(){
         //PRODUK
         Route::get('/produk', [PetugasController::class, 'produkIndex'])->name('produk');
 
-        //PEMBELIAN
+        //PENJUALAN
         Route::get('/pembelian', [PetugasController::class, 'pembelianIndex'])->name('pembelian');
         Route::get('/create/pembelian', [PetugasController::class, 'createPenjualan'])->name('create.penjualan');
         Route::post('/sale/create', [PetugasController::class, 'saleCreate'])->name('sale.create');
         Route::post('/checkout', [PetugasController::class, 'nonMemberCheckout'])->name('checkout');
         Route::get('/non-member/struk/{id}', [PetugasController::class, 'nonMemberStruk'])->name('non-member.struk');
+        Route::get('/member/checkout', [PetugasController::class, 'membership'])->name('member.checkout');
+        Route::post('/member/checkout/proses', [PetugasController::class, 'memberCheckout'])->name('member.proses');
+        Route::get('/member/struk/{id}', [PetugasController::class, 'memberStruk'])->name('member.struk');
 
-
+        // EXPORT
+        Route::get('/unduh-struk/{id}', [PetugasController::class, 'unduhStruk'])->name('unduh.struk'); 
+        Route::get('/export-transactions', [PetugasController::class, 'exportTransactions'])->name('export.transactions');
     });
 });

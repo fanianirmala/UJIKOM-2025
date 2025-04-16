@@ -45,9 +45,9 @@
                                 </a>
                             </li>
                             <li class="sidebar-item">
-                                <a href="#" class="sidebar-link {{ $route == 'admin.pembelian' ? 'active' : '' }}">
+                                <a href="{{ route('admin.pembelian') }}" class="sidebar-link {{ $route == 'admin.pembelian' ? 'active' : '' }}">
                                     <i class="ti ti-shopping-cart-filled" style="font-size: 20px; color: #757575;"></i>
-                                    Pembelian
+                                    Penjualan
                                 </a>
                             </li>
                             <li class="sidebar-item">
@@ -69,7 +69,7 @@
                             <li class="sidebar-item">
                                 <a href="{{ route('petugas.pembelian') }}" class="sidebar-link {{ in_array(Route::currentRouteName(), ['petugas.pembelian', 'petugas.create.penjualan', 'petugas.sale.create', 'petugas.checkout', 'petugas.member.checkout', 'petugas.member.struk', 'petugas.non-member.struk']) ? 'active' : '' }}">
                                     <i class="ti ti-shopping-cart-filled" style="font-size: 20px; color: #757575;"></i>
-                                    Pembelian
+                                    Penjualan
                                 </a>
                             </li>
                         @endif

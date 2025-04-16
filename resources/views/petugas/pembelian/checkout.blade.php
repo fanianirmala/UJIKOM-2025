@@ -103,7 +103,7 @@
             </div>
         @endif
 
-        <form action="{{ route('petugas.checkout') }}" method="POST">
+        <form action="{{ route('petugas.checkout') }}" method="POST" id="checkoutForm">
             @csrf
             <div class="mb-3">
                 <label for="inputState" class="form-label">Member Status <span style="color: red; font-size: 13px;">Dapat juga membuat member</span></label>
@@ -163,6 +163,19 @@
                 inputTotal.classList.remove('is-invalid');
             }
         });
+
+        document.getElementById('checkoutForm').addEventListener('submit', function (e) {
+            let raw = inputTotal.value.replace(/[^\d]/g, '');
+            let totalInput = parseInt(raw || 0);
+
+            if (totalInput < grandTotal) {
+                alertBox.style.display = 'block';
+                alertBox.innerText = 'Pembayaran kurang dari total harga.';
+                inputTotal.classList.add('is-invalid');
+                e.preventDefault(); // ini sekarang bakal jalan!
+            }
+        });
+
     });
 </script>
 

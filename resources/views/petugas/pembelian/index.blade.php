@@ -108,7 +108,7 @@
 <p class="title mb-3 mt-2">Penjualan</p>
 
 <div class="buttonAction">
-    <a href="#" class="exportBtn mt-3">Export Penjualan (.xlsx)</a>
+    <a href="{{ route('petugas.export.transactions') }}" class="exportBtn mt-3">Export Penjualan (.xlsx)</a>
     <a href="{{ route('petugas.create.penjualan') }}" class="addBtn mt-3">Tambah Penjualan</a>
 
 </div>
@@ -196,7 +196,7 @@
                                 </div>
                                 </div>
                             </div>
-                            <a href="#" class="unduhBtn">Unduh Bukti</a>
+                            <a href="{{ route('petugas.unduh.struk', $transaction->id) }}" class="unduhBtn">Unduh Bukti</a>
                         </td>
                     </tr>
                 @endforeach

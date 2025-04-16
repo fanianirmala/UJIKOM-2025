@@ -66,10 +66,10 @@
     <div class="content">
 
         <h1>Struk Pembelian</h1>
-        <p>Member Status : Member</p>
-        <p>No. HP : 111</p>
-        <p>Bergabung Sejak : 10-04-25</p>
-        <p>Point Member : 67898</p>
+        <p>Member Status : {{ $transaction->customer->member_status == 'member' ? 'Member' : 'Non Member' }}</p>
+        <p>No. HP : {{ $transaction->customer->member_status == 'member' ? $transaction->customer->phone_number : '-' }}</p>
+        <p>Bergabung Sejak : {{ $transaction->customer->member_status == 'member' ? \Carbon\Carbon::parse($transaction->customer->joined_at)->format('d F Y') : '-' }}</p>
+        <p>Point Member : {{ $transaction->customer->member_status == 'member' ? $transaction->customer->points : '-' }}</p>
 
         <table>
             <tr>
@@ -78,28 +78,41 @@
               <th>Harga</th>
               <th>Subtotal</th>
             </tr>
+            @php
+                $totalBelanja = 0;
+                foreach ($transaction->detailTransactions as $item) {
+                    $totalBelanja += $item->product->price * $item->qty;
+                }
+            @endphp
+
+            @foreach($transaction->detailTransactions as $detail)
                 <tr>
-                    <td>Kucing Lucu</td>
-                    <td>12</td>
-                    <td>Rp. 80.000</td>
-                    <td>Rp. 240.000</td>
+                    <td>{{ $detail->product->product_name }}</td>
+                    <td>{{ $detail->qty }}</td>
+                    <td>Rp. {{ number_format($detail->product->price, 0, ',', '.') }}</td>
+                    <td>Rp. {{ number_format($detail->qty * $detail->product->price, 0, ',', '.') }}</td>
                 </tr>
+            @endforeach
             <tr>
-                <td rowspan="4">Point Digunakan</td>
-                <td rowspan="4">17013</td>
+                <td rowspan="5">Point Digunakan</td>
+                <td rowspan="5">{{ $transaction->point_used ?? 0 }}</td>
                 <td>Total Harga</td>
-                <td>Rp. 240.000</td>
+                <td>Rp. {{ number_format($totalBelanja, 0, ',', '.') }}</td>
             </tr>
             <tr>
                 <td>Harga Setelah Poin</td>
-                <td>Rp. 235.680</td>
+                <td>Rp. {{ number_format($transaction->discount_price, 0, ',', '.') }}</td>
             </tr>
             <tr>
                 <td>Total Kembalian</td>
-                <td>Rp. 10.328</td>
+                <td>Rp. {{ number_format($transaction->change, 0, ',', '.') }}</td>
+            </tr>
+            <tr>
+                <td>Total Bayar Customer</td>
+                <td>Rp. {{ number_format($transaction->customer_pay, 0, ',', '.') }}</td>
             </tr>
         </table>
-        <p style="text-align: center;">10-04-25 | Petugas</p>
+        <p style="text-align: center;">{{ $transaction->created_at->format('d-m-Y H:i') }} | {{ $transaction->user->name }}</p>
         <p style="text-align: center;">Terima kasih atas pembelian Anda!</p>
     </div>
 </body>

@@ -49,29 +49,33 @@
 <body>
 
 <div class="nav d-flex">
-    <a href="#"><i class="ti ti-home"></i></a><p><span> > </span> Dashboard</p>
+    <a href="{{ route('petugas.dashboard') }}"><i class="ti ti-home"></i></a><p><span> > </span> Dashboard</p>
 </div>
 
 <p class="title mb-3 mt-2">Dashboard</p>
 
-<div class="card p-3" style="width: 1050px;">
+<div class="card p-3" style="width: 1220px;">
     <div class="header p-2" style="font-size: 20px; font-weight: bold;">
         Selamat Datang, Petugas!
     </div>
     <div class="card text-center">
         <div class="card-header p-3 text-body-secondary">
-            Total Penjualan Hari ini 10-04-25
+            Total Penjualan Hari ini ({{ \Carbon\Carbon::parse($today)->format('d M Y') }})
         </div>
 
         <div class="card-body">
             <h5 class="card-title mb-3 mt-3" style="font-size: 30px;">
-                18
+                {{ $penjualanHariIni }}
             </h5>
             <p class="card-text mb-3">Jumlah total penjualan yang terjadi hari ini.</p>
         </div>
 
         <div class="card-footer text-body-secondary p-3">
-                Terakhir diperbarui: 10-04-25
+            @if ($penjualanHariIni > 0)
+                Terakhir diperbarui: {{ \Carbon\Carbon::parse($lastPenjualan->tanggal_penjualan)->format('d M Y H:i') }}
+            @else
+                Tidak ada data penjualan hari ini.
+            @endif
         </div>
     </div>
 </div>

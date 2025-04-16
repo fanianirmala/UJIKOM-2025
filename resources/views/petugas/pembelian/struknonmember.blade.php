@@ -4,11 +4,11 @@
     <div class="d-flex justify-content-between">
         <div class="d-flex" style="gap: 5px;">
             <a href="{{ route('petugas.pembelian') }}" class="btn btn-secondary" style="height: 40px;">Kembali</a>
-            <a href="#" class="btn btn-primary" style="height: 40px;">Unduh</a>
+            <a href="{{ route('petugas.unduh.struk', $transaction->id) }}" class="btn btn-primary" style="height: 40px;">Unduh</a>
         </div>
         <div class="info text-end mt-2" style="line-height: 10px; margin-right: 10px;">
             <p>Invoice - #{{ $transaction->id }}</p>
-            <p>{{ \Carbon\Carbon::parse($transaction->created_at)->format('d F Y') }}</p>
+            <p>{{ \Carbon\Carbon::parse($transaction->created_at)->format('d F Y H:i') }}</p>
         </div>
     </div>
 
